@@ -4,54 +4,502 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Valentine?</title>
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #0b0b10; color: #fff; display:flex; min-height:100vh; margin:0; align-items:center; justify-content:center; }
-    .card { width:min(680px, 92vw); background:#141421; border:1px solid #26263a; border-radius:18px; padding:28px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
-    h1 { margin:0 0 10px; font-size:28px; }
-    p { margin:0 0 18px; line-height:1.5; color:#d6d6ff; }
-    .row { display:flex; gap:12px; flex-wrap:wrap; }
-    button { cursor:pointer; border:0; padding:12px 18px; border-radius:14px; font-size:16px; font-weight:650; }
-    #yes { background:#ff4d6d; color:#0b0b10; }
-    #no { background:#2a2a3f; color:#fff; }
-    .msg { margin-top:14px; font-weight:700; color:#ffcfdd; min-height:22px; }
-    .letter { display:none; margin-top:18px; padding:18px; border-radius:14px; background:#10101a; border:1px solid #2a2a3f; color:#f3f3ff; }
-    .signature { margin-top:14px; color:#ffcfdd; font-weight:700; }
+    :root{
+      --bg1:#2b0f1f;
+      --bg2:#0a0206;
+      --card:#14060c;
+      --accent:#ff4d6d;
+      --accent2:#ff758f;
+      --text:#ffe6ec;
+      --soft:#ffb3c7;
+      --soft2:#f3c6d3;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(circle at top, var(--bg1), var(--bg2) 70%);
+      font-family: "Georgia", "Times New Roman", serif;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    /* Floating hearts layer */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .heart {
+      position: absolute;
+      bottom: -40px;
+      width: 18px;
+      height: 18px;
+      transform: rotate(45deg);
+      opacity: 0.75;
+      animation: floatUp linear forwards;
+      filter: blur(0.2px);
+    }
+    .heart::before, .heart::after {
+      content:"";
+      position:absolute;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background: inherit;
+    }
+    .heart::before { left:-9px; top:0; }
+    .heart::after  { left:0; top:-9px; }
+
+    @keyframes floatUp {
+      from { transform: translateY(0) rotate(45deg); }
+      to   { transform: translateY(-120vh) rotate(45deg); opacity: 0; }
+    }
+
+    .wrap{
+      position: relative;
+      z-index: 2;
+      width:min(720px, 92vw);
+      padding: 24px 0;
+    }
+
+    .card{
+      background: rgba(20, 6, 12, 0.9);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 180, 200, 0.2);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 400ms ease;
+    }
+
+    .card.glow{
+      box-shadow: 0 20px 70px rgba(255, 77, 109, 0.20), 0 18px 55px rgba(0,0,0,0.55);
+      animation: glowPulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse{
+      0%,100%{ box-shadow: 0 20px 70px rgba(255, 77, 109, 0.16), 0 18px 55px rgba(0,0,0,0.55); }
+      50%{ box-shadow: 0 24px 86px rgba(255, 117, 143, 0.22), 0 18px 55px rgba(0,0,0,0.55); }
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:30px;
+      text-align:center;
+      color: var(--soft);
+    }
+
+    .subtitle{
+      text-align:center;
+      color: var(--soft2);
+      margin: 0 0 24px;
+      font-style: italic;
+    }
+
+    .row{
+      display:flex;
+      justify-content:center;
+      gap:16px;
+      margin-bottom:14px;
+      flex-wrap: wrap;
+      position: relative; /* helps with runaway positioning context */
+    }
+
+    button{
+      border:none;
+      padding:14px 22px;
+      font-size:16px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      transform: translateY(0);
+      transition: transform 120ms ease, filter 120ms ease, left 120ms ease, top 120ms ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    button:active{ transform: translateY(1px); }
+
+    #yes{
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #14060c;
+      position: relative;
+      z-index: 2;
+    }
+
+    #no{
+      background: #2a0f18;
+      color: #ffd6e0;
+      border: 1px solid #ff8fa3;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* When "No" becomes slippery, it goes absolute inside the row */
+    #no.slippery{
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translate(-50%, 0);
+    }
+
+    .msg{
+      text-align:center;
+      font-weight:700;
+      margin-top:10px;
+      color:#ff9eb3;
+      min-height:24px;
+    }
+
+    /* Letter reveal animation */
+    .letter{
+      display:none;
+      margin-top:26px;
+      background: linear-gradient(180deg, #12060b, #1a0a11);
+      padding:26px;
+      border-radius:16px;
+      border:1px solid rgba(255, 160, 190, 0.25);
+      line-height:1.65;
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .letter.show{
+      display:block;
+      animation: letterIn 650ms cubic-bezier(.2,.9,.2,1) forwards;
+    }
+
+    @keyframes letterIn{
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .letter h2{
+      margin:0 0 14px;
+      color: var(--soft);
+      text-align:center;
+      letter-spacing: 1px;
+      font-size: 22px;
+    }
+
+    .signature{
+      margin-top:22px;
+      color:#ff9eb3;
+      font-weight:700;
+      text-align:right;
+    }
+
+    /* Heart confetti burst */
+    .burst-layer{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3;
+      overflow: hidden;
+    }
+
+    .confetti-heart{
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      transform: rotate(45deg);
+      opacity: 1;
+      animation: burst 900ms ease-out forwards;
+    }
+    .confetti-heart::before, .confetti-heart::after{
+      content:"";
+      position:absolute;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background: inherit;
+    }
+    .confetti-heart::before{ left:-6px; top:0; }
+    .confetti-heart::after{ left:0; top:-6px; }
+
+    @keyframes burst{
+      to{
+        transform: translate(var(--dx), var(--dy)) rotate(45deg);
+        opacity: 0;
+      }
+    }
+
+    /* Soft vignette */
+    .vignette{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255, 77, 109, 0.10), transparent 55%),
+        radial-gradient(circle at 50% 80%, rgba(255, 179, 199, 0.08), transparent 60%),
+        radial-gradient(circle at center, transparent 45%, rgba(0,0,0,0.55) 100%);
+    }
   </style>
 </head>
+
 <body>
-  <div class="card" id="screen">
-    <h1>Would you like to be my Valentine, my love?</h1>
-    <p>Choose wisely. The universe is literally watching.</p>
+  <div class="hearts" id="hearts"></div>
+  <div class="vignette"></div>
+  <div class="burst-layer" id="burst"></div>
 
-    <div class="row">
-      <button id="yes">Yes</button>
-      <button id="no">No</button>
-    </div>
+  <div class="wrap">
+    <div class="card" id="card">
+      <h1>Would you like to be my Valentine, my love?</h1>
+      <p class="subtitle">Choose carefully. Fate has opinions.</p>
 
-    <div class="msg" id="msg"></div>
+      <div class="row" id="buttonRow">
+        <button id="yes">Yes</button>
+        <button id="no">No</button>
+      </div>
 
-    <div class="letter" id="letter">
-      <h2 style="margin:0 0 10px; font-size:22px;">My letter to you</h2>
-      <p>
-        insert letter
-      </p>
-      <p class="signature">Happy Valentine’s Day 💗</p>
+      <div class="msg" id="msg"></div>
+
+      <div class="letter" id="letter">
+        <h2>HAPPY VALENTINE’S DAY<br>MY FIRST AND ONLY VALENTINE FOR LIFE</h2>
+
+        <p>
+          It’s been 174 days since we started talking and yet it feels so fresh in my mind
+          about the moment I first asked you to be my girlfriend. Since that day, I knew I
+          was going to experience so much in my life with you.
+        </p>
+
+        <p>
+          We both grew mentally and emotionally with each other to such a great extent that
+          I can confide everything in my life with you. It’s like my heart is simply an
+          extension connected to yours.
+        </p>
+
+        <p>
+          Experiencing my first Valentine’s with you is the greatest feeling ever and I know
+          this will be the first of many in our lives. I can’t wait to travel the world with you,
+          experience new things with you, marry you, fuck you, and a wholeeee lot more.
+        </p>
+
+        <p>
+          You make my life so easy and I surely hope I do the same for you as well. You’re such
+          a great person in my life and I really value you more than anything in the world.
+          All your emotions, feelings, reactions, I feel so happy experiencing it all with you.
+        </p>
+
+        <p>
+          You’re so mf cute and I hope you have a great Valentine’s Day with me. While I know
+          we’ll be long distance, I still feel that every time we talk with each other, it’s magical.
+          My heart skips a beat when I hear your voice and my cheeks flush up.
+        </p>
+
+        <p>
+          I know for a fact it’s the same with you as well because your headdasssss camera is always offffff.
+          But hey, I know on Valentine’s Day, you’re mine and I’ll make sure that we have a great time,
+          as always.
+        </p>
+
+        <p>
+          Love you more than the entire universe and can’t wait for this summer when we’re together.
+        </p>
+
+        <div class="signature">
+          Your love and your husband,<br>
+          Harshit
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
+    const heartsLayer = document.getElementById("hearts");
+    const burstLayer = document.getElementById("burst");
     const msg = document.getElementById("msg");
     const letter = document.getElementById("letter");
+    const card = document.getElementById("card");
+    const noBtn = document.getElementById("no");
+    const yesBtn = document.getElementById("yes");
+    const row = document.getElementById("buttonRow");
 
-    document.getElementById("yes").addEventListener("click", () => {
+    let noIsSlippery = false;
+
+    // Floating hearts generator
+    function spawnFloatingHeart() {
+      const h = document.createElement("div");
+      h.className = "heart";
+
+      const left = Math.random() * 100;
+      const size = 10 + Math.random() * 18;
+      const duration = 6 + Math.random() * 8;
+      const drift = (Math.random() * 40) - 20;
+
+      const colors = ["#ff4d6d", "#ff758f", "#ffb3c7", "#ffd6e0"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      h.style.left = left + "vw";
+      h.style.width = size + "px";
+      h.style.height = size + "px";
+      h.style.background = color;
+      h.style.animationDuration = duration + "s";
+
+      h.animate(
+        [
+          { transform: "translate(0, 0) rotate(45deg)", opacity: 0.75 },
+          { transform: `translate(${drift}px, -120vh) rotate(45deg)`, opacity: 0 }
+        ],
+        { duration: duration * 1000, easing: "linear", fill: "forwards" }
+      );
+
+      heartsLayer.appendChild(h);
+      setTimeout(() => h.remove(), duration * 1000 + 200);
+    }
+    setInterval(spawnFloatingHeart, 280);
+
+    // Confetti heart burst on Yes
+    function heartBurst() {
+      const rect = card.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + 120;
+
+      const count = 28;
+      const colors = ["#ff4d6d", "#ff758f", "#ffb3c7", "#ffd6e0"];
+
+      for (let i = 0; i < count; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti-heart";
+
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        c.style.background = color;
+
+        c.style.left = originX + "px";
+        c.style.top = originY + "px";
+
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 80 + Math.random() * 140;
+        const dx = Math.cos(angle) * radius;
+        const dy = Math.sin(angle) * radius - (60 + Math.random() * 60);
+
+        c.style.setProperty("--dx", dx + "px");
+        c.style.setProperty("--dy", dy + "px");
+
+        burstLayer.appendChild(c);
+        setTimeout(() => c.remove(), 950);
+      }
+    }
+
+    function showLetter() {
       msg.textContent = "";
+      card.classList.add("glow");
+
+      letter.classList.remove("show");
       letter.style.display = "block";
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      void letter.offsetWidth;
+      letter.classList.add("show");
+
+      heartBurst();
+
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }, 250);
+    }
+
+    function hideLetterWithWrong() {
+      card.classList.remove("glow");
+      letter.classList.remove("show");
+      letter.style.display = "none";
+      msg.textContent = "No More Highland Cows For You Unless You Get It Right.";
+    }
+
+    // Make the No button dodge after the first "No"
+    function enableSlipperyNo() {
+      if (noIsSlippery) return;
+      noIsSlippery = true;
+
+      noBtn.classList.add("slippery");
+
+      // Put it somewhere not annoying at start
+      const rowRect = row.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      const startX = (rowRect.width / 2) + 90;
+      const startY = 0;
+
+      noBtn.style.left = startX + "px";
+      noBtn.style.top = startY + "px";
+    }
+
+    function moveNoAway(pointerX, pointerY) {
+      if (!noIsSlippery) return;
+
+      const rowRect = row.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      // pointer position inside the row
+      const px = pointerX - rowRect.left;
+      const py = pointerY - rowRect.top;
+
+      // current button center inside row
+      const bx = (btnRect.left - rowRect.left) + btnRect.width / 2;
+      const by = (btnRect.top - rowRect.top) + btnRect.height / 2;
+
+      const dx = bx - px;
+      const dy = by - py;
+      const dist = Math.hypot(dx, dy);
+
+      // only dodge if pointer is close enough
+      if (dist > 140) return;
+
+      // push direction away from pointer, add chaos
+      const push = 110;
+      const jitter = 60;
+
+      const nx = (dx / (dist || 1)) * push + (Math.random() * jitter - jitter/2);
+      const ny = (dy / (dist || 1)) * push + (Math.random() * jitter - jitter/2);
+
+      // compute new top-left for absolute button inside row
+      let newLeft = (btnRect.left - rowRect.left) + nx;
+      let newTop  = (btnRect.top - rowRect.top) + ny;
+
+      // clamp inside row bounds so it doesn't escape the card
+      const padding = 6;
+      const maxLeft = rowRect.width - btnRect.width - padding;
+      const maxTop  = rowRect.height - btnRect.height - padding;
+
+      newLeft = Math.max(padding, Math.min(maxLeft, newLeft));
+      newTop  = Math.max(padding, Math.min(maxTop, newTop));
+
+      noBtn.style.left = newLeft + "px";
+      noBtn.style.top = newTop + "px";
+    }
+
+    // Events
+    yesBtn.addEventListener("click", () => {
+      showLetter();
     });
 
-    document.getElementById("no").addEventListener("click", () => {
-      letter.style.display = "none";
-      msg.textContent = "WRONGGGG try again.";
+    noBtn.addEventListener("click", () => {
+      hideLetterWithWrong();
+      enableSlipperyNo();
+    });
+
+    // Dodge on mouse move (desktop) and touch move (mobile)
+    row.addEventListener("mousemove", (e) => {
+      moveNoAway(e.clientX, e.clientY);
+    }, { passive: true });
+
+    row.addEventListener("touchmove", (e) => {
+      const t = e.touches[0];
+      if (!t) return;
+      moveNoAway(t.clientX, t.clientY);
+    }, { passive: true });
+
+    // Extra: if she manages to hover directly over "No", it still runs
+    noBtn.addEventListener("mouseenter", (e) => {
+      moveNoAway(e.clientX, e.clientY);
     });
   </script>
 </body>
